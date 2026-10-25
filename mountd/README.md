@@ -20,7 +20,7 @@ Each slice ends with tests that pass, and later with the same slice in Go.
 | 1 | **LX200 codec**: split the byte stream into commands; RA/Dec text ↔ numbers, both precisions | edge cases tested: 23:59:59.6 wraps to 00:00:00, −0°30′ keeps its sign, invalid input is refused | done 2026-10-23 |
 | 2 | **Session + fake mount**: answer each command from a mount that moves instantly; conversation tests (below) | Ekos's start-up conversation replays correctly | done 2026-10-23 |
 | 3 | **TCP server** | SkySafari, Stellarium or KStars on the Mac connect to a fake tinyscope on `localhost` (Sunday's goal); unknown commands are logged | done 2026-10-23 (tested on localhost; real clients on Sunday) |
-| 4 | **Sky maths**: sidereal time from clock and longitude, RA ↔ hour angle, the exact gear ratio (63.684 × 5) to steps | tested against published values | |
+| 4 | **Sky maths**: sidereal time from clock and longitude, RA ↔ hour angle, the exact gear ratio (63.684 × 5) to steps | tested against published values | done 2026-10-25 (`sky.py`: Meeus 7.a, 12.a, 12.b to 1 ms; 20 378.9 half-steps per axis turn, one every 4.228 s when tracking) |
 | 5 | **Core motion**: slews at a set speed, tracking, limits (RA ±150°, Dec −35°…100°), backlash take-up in one direction | a fake motor with a fake clock moves as expected | started 2026-10-25: the fake mount's manual moves (`:M`/`:Q` per axis, four rates, park) on a fake clock |
 | 6 | **Pointing log**: commanded vs synced position to CSV | a sync writes a row | |
 | 7 | **GPIO back-end** on the Pi | the RA axis turns from Ekos | |
