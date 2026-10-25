@@ -1,0 +1,67 @@
+# INDI's LX200 Autostar driver connecting from Ekos, recorded 2026-10-25 and trimmed:
+# the 1 s :GR#/:GD# polling is cut, and the site is made up (Ekos sends the real one).
+# Every query must get an answer: the driver waits 5 s for each one that doesn't.
+> \x06
+< P
+> \x06
+< P
+> :Gc#
+< 24#
+> :GM#
+< tinyscope#
+> :GT#
+< 60.1#
+> :Gt#
+< +60*00#
+> :Gg#
+< 000*00#
+> :GG#
+< +00#
+> :GL#
+< 00:00:00#
+> :GC#
+< 01/01/26#
+> :GVD#
+< Oct 25 2026#
+> :GVT#
+< 00:00:00#
+> :GVN#
+< 0.1#
+> :GVF#
+< tinyscope 0.1#
+> :GVP#
+< tinyscope#
+# Ekos sends its site and clock
+> :Sg000*00#
+< 1
+> :St+45*00#
+< 1
+> :SG-1.0#
+< 1
+> :SL20:01:33#
+< 1
+> :SC10/25/26#
+< 1Updating Planetary Data#                              #
+> :Sg-05*00#
+< 1
+> :St+45*00#
+< 1
+# then reads where the mount is, GoTo, sync
+> :GR#
+< 00:00:00#
+> :GD#
+< +90*00:00#
+> :Sr01:06:08#
+< 1
+> :Sd+10*23:28#
+< 1
+> :MS#
+< 0
+> :D#
+< #
+> :CM#
+< tinyscope synced#
+> :GR#
+< 01:06:08#
+> :GD#
+< +10*23:28#

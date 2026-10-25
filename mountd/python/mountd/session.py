@@ -12,6 +12,8 @@ log = logging.getLogger("mountd.lx200")
 
 PRODUCT = "tinyscope"
 FIRMWARE = "0.1"
+FIRMWARE_DATE = "Oct 25 2026"                            # Meade's format, as :GVD# returns it
+FIRMWARE_TIME = "00:00:00"
 
 
 class Session:
@@ -90,6 +92,11 @@ class Session:
     def _firmware(self, _):
         return FIRMWARE + "#"
 
+    def _constant(text):
+        def get(self, _):
+            return text + "#"
+        return get
+
     # --- site and time: stored and read back until the sky maths (slice 4) uses them ---
 
     def _setter(key):
@@ -112,6 +119,11 @@ class Session:
     # Longest prefixes first: 'GVP' before 'GV', 'Sr' and 'SG' are different commands.
     _COMMANDS = [
         ("GVP", _product), ("GVN", _firmware),
+        # INDI's Autostar driver asks these on connect and waits 5 s for each unanswered one
+        ("GVD", _constant(FIRMWARE_DATE)), ("GVT", _constant(FIRMWARE_TIME)),
+        ("GVF", _constant(f"{PRODUCT} {FIRMWARE}")), ("GM", _constant(PRODUCT)),
+        ("Gc", _constant("24")),                         # 24-hour clock
+        ("GT", _constant("60.1")),                       # tracking rate in Meade's unit (sidereal)
         ("GR", _get_ra), ("GD", _get_dec),
         ("Sr", _set_ra), ("Sd", _set_dec),
         ("MS", _slew), ("CM", _sync), ("Q", _abort), ("D", _distance), ("U", _toggle_precision),
