@@ -1,0 +1,18 @@
+# A GoTo: set the target, slew, read the position back.
+# The fake mount starts at the pole and arrives instantly.
+> :GR#
+< 00:00:00#
+> :GD#
+< +90*00:00#
+> :Sr 05:35:17#
+< 1
+> :Sd -05*23:28#
+< 1
+> :MS#
+< 0
+> :D#
+< #
+> :GR#
+< 05:35:17#
+> :GD#
+< -05*23:28#

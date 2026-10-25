@@ -1,0 +1,5 @@
+.DS_Store
+__pycache__/
+/.commit-requests/
+# build123d output; commit a STEP/STL file on purpose with `git add -f`
+/cad/out/

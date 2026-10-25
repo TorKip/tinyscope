@@ -1,0 +1,16 @@
+# Bad input is refused with '0', and the old target stays.
+> :Sr 25:00:00#
+< 0
+> :Sd +95*00:00#
+< 0
+# Slewing with no target set fails with a message.
+> :MS#
+< 2No target set#
+# Unknown commands get no reply (and a log line).
+> :XYZ#
+# Noise between commands is ignored, and two commands in one read both get answers.
+> #:GVP#:GVN#
+< tinyscope#0.1#
+# ACK asks for the mount type: P = polar (equatorial).
+> \x06
+< P

@@ -1,0 +1,62 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>tinyscope</title>
+<style>
+:root{--bg:#eef0f3;--text:#1d2330;--panel:rgba(255,255,255,.85)}
+@media (prefers-color-scheme:dark){:root{--bg:#14171d;--text:#e6e9ef;--panel:rgba(30,34,42,.85)}}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:13px system-ui,sans-serif;overflow:hidden}
+#t{position:absolute;top:10px;left:12px;right:12px;max-width:520px;background:var(--panel);padding:8px 10px;border-radius:8px}
+#t label{display:flex;gap:8px;align-items:center;margin-top:4px}#t input[type=range]{flex:1}
+#t button{margin:4px 4px 0 0}.k{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 3px 0 8px}
+</style></head><body>
+<div id="t"><b>tinyscope</b>: Pi 3B + camera v1 on a printed fork, fixed wedge (latitude 60°).
+<span class="k" style="background:#ed8c38"></span>print <span class="k" style="background:#408cd9"></span>print (small parts)
+<span class="k" style="background:#737a85"></span>bought / in hand. Drag to orbit, scroll to zoom.
+<label>Hour angle <input id="ha" type="range" min="-180" max="180" value="0" step="1"><span id="hav"></span></label>
+<label>Dec <input id="dec" type="range" min="-35" max="100" value="20" step="1"><span id="decv"></span></label>
+<label><input id="fov" type="checkbox" checked> show the camera's field (53.5° × 41.4°)</label>
+<button data-p="0,90">pole</button><button data-p="0,0">meridian, equator</button><button data-p="0,-30">south horizon</button>
+<button data-p="-90,20">east</button><button data-p="90,20">west</button><button data-p="0,60">overhead-ish</button>
+</div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+const TILT=__TILT__, HC=__HC__, DECH=__DECH__, D=Math.PI/180;
+const q=new URLSearchParams(location.hash.slice(1));
+const dark=matchMedia('(prefers-color-scheme: dark)').matches;
+const r=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});r.setPixelRatio(Math.min(devicePixelRatio,2));
+r.setSize(innerWidth,innerHeight);document.body.appendChild(r.domElement);
+const s=new THREE.Scene();s.background=new THREE.Color(dark?0x14171d:0xeef0f3);
+const c=new THREE.PerspectiveCamera(35,innerWidth/innerHeight,1,5000);c.up.set(0,0,1);
+const v=(q.get('view')||'320,-260,260').split(',').map(Number);c.position.set(...v);
+const o=new OrbitControls(c,r.domElement);o.target.set(0,10,85);o.update();
+s.add(new THREE.HemisphereLight(0xffffff,0x8890a0,3.0));const dl=new THREE.DirectionalLight(0xffffff,2.4);dl.position.set(200,-300,400);s.add(dl);
+// tripod plate stand-in
+const tp=new THREE.Mesh(new THREE.CylinderGeometry(30,30,8,48),new THREE.MeshStandardMaterial({color:0x30343a}));
+tp.rotation.x=Math.PI/2;tp.position.z=-4;s.add(tp);
+const raPivot=new THREE.Group();raPivot.position.set(0,0,HC);raPivot.rotation.x=-TILT*D;s.add(raPivot);
+const raSpin=new THREE.Group();raPivot.add(raSpin);
+const decPivot=new THREE.Group();decPivot.position.set(0,0,DECH);raSpin.add(decPivot);
+const decSpin=new THREE.Group();decPivot.add(decSpin);
+// field of view: a pyramid from the lens along head +y
+const L=160,th=Math.tan(26.75*D)*L,tv=Math.tan(20.7*D)*L,y0=20.3;
+const g=new THREE.BufferGeometry();const P=[[0,y0,0],[-th,y0+L,-tv],[th,y0+L,-tv],[th,y0+L,tv],[-th,y0+L,tv]];
+g.setAttribute('position',new THREE.Float32BufferAttribute([0,1,2,0,2,3,0,3,4,0,4,1].flatMap(i=>P[i]),3));
+const fov=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xffd23f,transparent:true,opacity:.18,side:THREE.DoubleSide,depthWrite:false}));
+decSpin.add(fov);
+const load=(b64,parent)=>{const bin=Uint8Array.from(atob(b64),ch=>ch.charCodeAt(0)).buffer;
+  new GLTFLoader().parse(bin,'',m=>{m.scene.rotation.x=Math.PI/2;m.scene.scale.setScalar(1000);parent.add(m.scene);});};
+load('__FIXED__',s);load('__RA__',raSpin);load('__HEAD__',decSpin);
+const ha=document.getElementById('ha'),de=document.getElementById('dec');
+// hour angle 0 = fork on the meridian with the camera swinging south: the mount frame's +y is north-down, so add 180°
+const upd=()=>{raSpin.rotation.z=(180+Number(ha.value))*D;decSpin.rotation.x=Number(de.value)*D;
+  document.getElementById('hav').textContent=ha.value+'°';document.getElementById('decv').textContent=de.value+'°';};
+ha.oninput=de.oninput=upd;document.getElementById('fov').onchange=e=>fov.visible=e.target.checked;
+document.querySelectorAll('button[data-p]').forEach(b=>b.onclick=()=>{const [h,d]=b.dataset.p.split(',');ha.value=h;de.value=d;upd();});
+if(q.get('ha'))ha.value=q.get('ha');if(q.get('dec'))de.value=q.get('dec');if(q.get('ui')==='0')document.getElementById('t').style.display='none';
+upd();
+addEventListener('resize',()=>{c.aspect=innerWidth/innerHeight;c.updateProjectionMatrix();r.setSize(innerWidth,innerHeight);});
+r.setAnimationLoop(()=>{o.update();r.render(s,c);});
+</script></body></html>

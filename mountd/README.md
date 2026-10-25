@@ -1,0 +1,59 @@
+# mountd
+
+The mount daemon on the Pi: it steps the motors, tracks, and speaks LX200 over
+TCP ([ADR 0001](../docs/adr/0001-lx200-first.md)). Built in Python first, then
+each finished slice again in Go ([ADR 0002](../docs/adr/0002-mountd-in-python-and-go.md)).
+Shape: a core with no protocol or GPIO code, LX200 in front, real or fake
+motors behind ([docs/software.md](../docs/software.md)).
+
+Python: standard library only (3.11, as on Raspberry Pi OS Bookworm), so it
+runs on the Mac and the Pi with nothing to install.
+
+    cd mountd/python && python3 -m unittest
+
+## Slices
+
+Each slice ends with tests that pass, and later with the same slice in Go.
+
+| # | Slice | Done when | State |
+|---|---|---|---|
+| 1 | **LX200 codec**: split the byte stream into commands; RA/Dec text ↔ numbers, both precisions | edge cases tested: 23:59:59.6 wraps to 00:00:00, −0°30′ keeps its sign, invalid input is refused | done 2026-10-23 |
+| 2 | **Session + fake mount**: answer each command from a mount that moves instantly; conversation tests (below) | Ekos's start-up conversation replays correctly | done 2026-10-23 |
+| 3 | **TCP server** | SkySafari, Stellarium or KStars on the Mac connect to a fake tinyscope on `localhost` (Sunday's goal); unknown commands are logged | done 2026-10-23 (tested on localhost; real clients on Sunday) |
+| 4 | **Sky maths**: sidereal time from clock and longitude, RA ↔ hour angle, the exact gear ratio (63.684 × 5) to steps | tested against published values | |
+| 5 | **Core motion**: slews at a set speed, tracking, limits (RA ±150°, Dec −35°…100°), backlash take-up in one direction | a fake motor with a fake clock moves as expected | |
+| 6 | **Pointing log**: commanded vs synced position to CSV | a sync writes a row | |
+| 7 | **GPIO back-end** on the Pi | the RA axis turns from Ekos | |
+
+## Running it (the fake mount)
+
+    cd mountd/python
+    python3 -m mountd --fake --record ~/Desktop/session.txt -v
+
+It listens on `127.0.0.1:4030` (`--host 0.0.0.0` to reach it from the phone).
+`--record` writes every exchange in the conversation format below, so a
+session with a real client can be copied into `conversations/` as a test.
+
+**Sunday's test, KStars/Ekos on the Mac:** make an Ekos profile with the mount
+driver *LX200 Basic* (or *LX200 Classic*), and in the driver's *Connection* tab
+choose *Network*, host `127.0.0.1`, port `4030`. Then connect, read the
+position, GoTo something, sync. Expect surprises: unknown commands show up as
+warnings in the log, and they are slice 2's next to-do list. (Unchecked:
+whether the driver offers *Network*. If not, SkySafari or Stellarium on the
+Mac can talk LX200 over TCP directly.)
+
+## Conversation tests
+
+The behaviour tests both languages must pass: plain text files in
+`conversations/`, one exchange per pair of lines. `>` is what the client
+sends, `<` the exact reply; a `>` with no `<` after it expects silence.
+
+```
+# Ekos connects and reads the position
+> :GR#
+< 00:00:00#
+> :GD#
+< +90*00:00#
+> :Sr 05:34:32#
+< 1
+```

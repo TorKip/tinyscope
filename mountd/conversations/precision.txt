@@ -1,0 +1,19 @@
+# ':U#' toggles between high and low precision, and sends nothing back.
+# Clients such as INDI read :GR# first and toggle if they get the format they don't want.
+> :Sr 00:42:44#
+< 1
+> :Sd +41*16:09#
+< 1
+> :MS#
+< 0
+> :U#
+> :GR#
+< 00:42.7#
+> :GD#
+< +41*16#
+> :U#
+> :GR#
+< 00:42:44#
+# Low-precision input is accepted in high-precision mode too.
+> :Sr 00:42.7#
+< 1
