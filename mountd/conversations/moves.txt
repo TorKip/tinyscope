@@ -1,0 +1,41 @@
+# Ekos's arrow buttons: pick a speed, start moving, stop.
+# '# t=' lines set the fake mount's clock in seconds, as --record writes them.
+# t=0
+> :Sr06:00:00#
+< 1
+> :Sd+00*00:00#
+< 1
+> :CM#
+< tinyscope synced#
+# find speed is 1°/s
+> :RM#
+> :Mn#
+# t=10
+> :Qn#
+> :GD#
+< +10*00:00#
+# INDI with Reverse on stops the opposite direction (:Ms# then :Qn#), so any
+# :Qn# or :Qs# stops the Dec axis, and any :Qe# or :Qw# the RA axis
+> :Ms#
+# t=15
+> :Qn#
+> :GD#
+< +05*00:00#
+> :Me#
+# t=30
+> :Qw#
+> :GR#
+< 07:00:00#
+# :Q# stops everything
+> :Mw#
+> :Mn#
+# t=45
+> :Q#
+> :GR#
+< 06:00:00#
+> :GD#
+< +20*00:00#
+# park: to the pole, no reply
+> :hP#
+> :GD#
+< +90*00:00#

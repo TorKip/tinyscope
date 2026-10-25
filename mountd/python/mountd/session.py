@@ -77,6 +77,31 @@ class Session:
         self.mount.abort()
         return ""
 
+    # --- manual moves (arrow buttons); none of these reply ---
+
+    def _move(axis, direction):
+        def move(self, _):
+            self.mount.move(axis, direction)
+            return ""
+        return move
+
+    def _stop(axis):
+        # Either direction stops the whole axis: INDI with Reverse on stops the opposite one.
+        def stop(self, _):
+            self.mount.stop(axis)
+            return ""
+        return stop
+
+    def _rate(name):
+        def rate(self, _):
+            self.mount.set_rate(name)
+            return ""
+        return rate
+
+    def _park(self, _):
+        self.mount.park()
+        return ""
+
     def _distance(self, _):
         return "\x7f#" if self.mount.is_slewing() else "#"   # a bar while slewing, as on the LX200
 
@@ -126,7 +151,11 @@ class Session:
         ("GT", _constant("60.1")),                       # tracking rate in Meade's unit (sidereal)
         ("GR", _get_ra), ("GD", _get_dec),
         ("Sr", _set_ra), ("Sd", _set_dec),
-        ("MS", _slew), ("CM", _sync), ("Q", _abort), ("D", _distance), ("U", _toggle_precision),
+        ("MS", _slew), ("CM", _sync), ("D", _distance), ("U", _toggle_precision),
+        ("Mn", _move("dec", +1)), ("Ms", _move("dec", -1)), ("Me", _move("ra", +1)), ("Mw", _move("ra", -1)),
+        ("Qn", _stop("dec")), ("Qs", _stop("dec")), ("Qe", _stop("ra")), ("Qw", _stop("ra")), ("Q", _abort),
+        ("RG", _rate("guide")), ("RC", _rate("centering")), ("RM", _rate("find")), ("RS", _rate("slew")),
+        ("hP", _park),
         ("St", _setter("latitude")), ("Sg", _setter("longitude")), ("SG", _setter("utc_offset")),
         ("SL", _setter("local_time")), ("SC", _set_date),
         ("Gt", _getter("latitude", "+60*00")), ("Gg", _getter("longitude", "000*00")),
