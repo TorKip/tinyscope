@@ -34,13 +34,23 @@ It listens on `127.0.0.1:4030` (`--host 0.0.0.0` to reach it from the phone).
 `--record` writes every exchange in the conversation format below, so a
 session with a real client can be copied into `conversations/` as a test.
 
-**Sunday's test, KStars/Ekos on the Mac:** make an Ekos profile with the mount
-driver *LX200 Basic* (or *LX200 Classic*), and in the driver's *Connection* tab
-choose *Network*, host `127.0.0.1`, port `4030`. Then connect, read the
-position, GoTo something, sync. Expect surprises: unknown commands show up as
-warnings in the log, and they are slice 2's next to-do list. (Unchecked:
-whether the driver offers *Network*. If not, SkySafari or Stellarium on the
-Mac can talk LX200 over TCP directly.)
+**With KStars/Ekos on the Mac** (first done 2026-10-25):
+
+1. Ekos profile: mount driver *LX200 Basic* (only the essentials) or
+   *LX200 Autostar* (asks for more). Leave **Remote** unchecked: Remote means
+   the INDI server runs on another machine, and Ekos then speaks INDI's XML to
+   port 4030 instead of starting a local LX200 driver.
+2. Start the profile (▶). In the INDI Control Panel: the driver → *Connection*
+   → **Network**, address `127.0.0.1` (not `localhost`, which macOS may resolve
+   to IPv6 `::1`), port `4030`, then **Set**. Back in *Main Control* →
+   *Connect*.
+3. Connect, GoTo, sync, abort. Unknown commands show up as warnings in the log.
+
+If it won't connect, take Ekos out of the picture: `nc 127.0.0.1 4030`, type
+`:GR#` and expect `00:00:00#` and a `client connected` line from `-v`.
+
+What LX200 Basic sent on 2026-10-25: no handshake, only `:GR#`/`:GD#` polled
+over and over, `:Sr`/`:Sd` (no space after the command), `:MS#`, `:CM#`, `:Q#`.
 
 ## Conversation tests
 

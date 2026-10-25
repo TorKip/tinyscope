@@ -52,6 +52,20 @@ class ServerTest(unittest.IsolatedAsyncioTestCase):
         recorded = [e[1:] for e in exchanges(self.record.getvalue())]
         self.assertEqual(recorded, [[":GVP#", "tinyscope#"], ["\x06", "P"]])
 
+    async def test_recording_has_times(self):
+        ticks = iter([100.0, 100.25, 101.5])                     # connect, then one per exchange
+        self.server.close()
+        self.server = await asyncio.start_server(
+            Server(self.mount, self.record, clock=lambda: next(ticks)).handle_client, "127.0.0.1", 0)
+        self.port = self.server.sockets[0].getsockname()[1]
+        reader, writer = await self.connect()
+        await self.ask(writer, reader, ":GR#", "00:00:00#")
+        await self.ask(writer, reader, ":GD#", "+90*00:00#")
+        writer.close()
+        await asyncio.sleep(0.05)
+        times = [line for line in self.record.getvalue().splitlines() if line.startswith("# t=")]
+        self.assertEqual(times, ["# t=0.250", "# t=1.500"])      # seconds since the client connected
+
 
 if __name__ == "__main__":
     unittest.main()
