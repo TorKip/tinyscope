@@ -1,12 +1,14 @@
 """One client's LX200 conversation: turns each command into a call on the mount and a reply.
 
 The session holds what the protocol keeps per connection (the target set by :Sr/:Sd, the
-precision); the mount holds where the telescope is. Commands we don't know get no reply and a
-log line, so a real client's session shows what it needs next.
+precision); the mount holds where the telescope is, the site where and when it stands.
+Commands we don't know get no reply and a log line, so a real client's session shows what it
+needs next.
 """
 import logging
 
 from .lx200 import ACK, format_dec, format_ra, parse_dec, parse_ra, split_commands
+from .site import Site
 
 log = logging.getLogger("mountd.lx200")
 
@@ -19,7 +21,7 @@ FIRMWARE_TIME = "00:00:00"
 class Session:
     def __init__(self, mount, site=None):
         self.mount = mount
-        self.site = site if site is not None else {}     # values clients set, read back as sent
+        self.site = site if site is not None else Site()  # shared by all clients, like the handset
         self.high = True                                 # precision; ':U#' toggles it
         self._target_ra = self._target_dec = None         # set by :Sr and :Sd
         self._buffer = ""
@@ -122,24 +124,26 @@ class Session:
             return text + "#"
         return get
 
-    # --- site and time: stored and read back until the sky maths (slice 4) uses them ---
+    # --- site and time (site.py converts Meade's signs) ---
 
-    def _setter(key):
+    def _setter(name):
         def set_(self, arg):
-            self.site[key] = arg
-            return "1"
+            return "1" if getattr(self.site, name)(arg) else "0"
         return set_
 
-    def _getter(key, default):
+    def _getter(name):
         def get(self, _):
-            return self.site.get(key, default) + "#"
+            return getattr(self.site, name)() + "#"
         return get
 
     def _set_date(self, arg):
-        self.site["date"] = arg
+        if not self.site.set_local_date(arg):
+            return "0"
         # The classic LX200 answers a date with '1' and two strings; INDI's driver reads them.
-        # To check against a real client on Sunday.
         return "1Updating Planetary Data#" + " " * 30 + "#"
+
+    def _sidereal_time(self, _):
+        return format_ra(self.site.lst()) + "#"           # always HH:MM:SS, whatever the precision
 
     # Longest prefixes first: 'GVP' before 'GV', 'Sr' and 'SG' are different commands.
     _COMMANDS = [
@@ -156,9 +160,9 @@ class Session:
         ("Qn", _stop("dec")), ("Qs", _stop("dec")), ("Qe", _stop("ra")), ("Qw", _stop("ra")), ("Q", _abort),
         ("RG", _rate("guide")), ("RC", _rate("centering")), ("RM", _rate("find")), ("RS", _rate("slew")),
         ("hP", _park),
-        ("St", _setter("latitude")), ("Sg", _setter("longitude")), ("SG", _setter("utc_offset")),
-        ("SL", _setter("local_time")), ("SC", _set_date),
-        ("Gt", _getter("latitude", "+60*00")), ("Gg", _getter("longitude", "000*00")),
-        ("GG", _getter("utc_offset", "+00")), ("GL", _getter("local_time", "00:00:00")),
-        ("GC", _getter("date", "01/01/26")),
+        ("St", _setter("set_latitude")), ("Sg", _setter("set_longitude")), ("SG", _setter("set_utc_offset")),
+        ("SL", _setter("set_local_time")), ("SC", _set_date),
+        ("Gt", _getter("latitude_text")), ("Gg", _getter("longitude_text")),
+        ("GG", _getter("utc_offset_text")), ("GL", _getter("local_time_text")),
+        ("GC", _getter("local_date_text")), ("GS", _sidereal_time),
     ]

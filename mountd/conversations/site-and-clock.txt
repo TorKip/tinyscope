@@ -1,0 +1,43 @@
+# A client sets the site and clock, then reads them back and asks for the sidereal time.
+# The time is Meeus's example 12.b: 1987 April 10, 19:21:00 UT, GMST 8h34m57.0896s.
+# Meade's signs: :SG is the hours to ADD to local time for UTC (UTC+2 is -2), :Sg is positive WEST.
+> :SG-2.0#
+< 1
+> :SL21:21:00#
+< 1
+> :SC04/10/87#
+< 1Updating Planetary Data#                              #
+> :Sg000*00#
+< 1
+> :GS#
+< 08:34:57#
+# 15° east: the sky one hour further on
+> :Sg-15*00#
+< 1
+> :GS#
+< 09:34:57#
+> :GL#
+< 21:21:00#
+> :GC#
+< 04/10/87#
+> :GG#
+< -02#
+> :Gg#
+< -015*00#
+# The clock keeps running: a minute later, sidereal time is 60.16 s on
+# t=60
+> :GL#
+< 21:22:00#
+> :GS#
+< 09:35:57#
+# Refused, and the old values stay
+> :SC13/40/87#
+< 0
+> :Sg400*00#
+< 0
+> :St+95*00#
+< 0
+> :GC#
+< 04/10/87#
+> :Gg#
+< -015*00#

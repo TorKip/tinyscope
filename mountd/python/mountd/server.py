@@ -1,4 +1,4 @@
-"""LX200 over TCP: each client gets its own Session; all of them share one mount.
+"""LX200 over TCP: each client gets its own Session; all of them share one mount and one site.
 
 With `record`, every exchange is appended in the conversation-file format, so a session with a
 real client (Ekos, SkySafari) becomes a conversation test by copying the file into
@@ -11,6 +11,7 @@ import logging
 import time
 
 from .session import Session
+from .site import Site
 
 log = logging.getLogger("mountd.server")
 
@@ -20,15 +21,16 @@ def _escape(text):
 
 
 class Server:
-    def __init__(self, mount, record=None, clock=time.monotonic):
+    def __init__(self, mount, record=None, clock=time.monotonic, site=None):
         self.mount = mount
+        self.site = site if site is not None else Site()
         self.record = record                     # an open text file, or None
         self.clock = clock
 
     async def handle_client(self, reader, writer):
         peer = writer.get_extra_info("peername")
         log.info("client connected: %s", peer)
-        session = Session(self.mount)
+        session = Session(self.mount, self.site)
         start = self.clock()
         if self.record:
             self.record.write(f"# client {peer} at {datetime.datetime.now().isoformat(timespec='seconds')}\n")

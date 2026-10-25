@@ -4,6 +4,7 @@ File format (shared with the Go version): '>' lines are sent, the '<' line after
 reply expected (no '<' line = expect silence), '#' at the start of a line is a comment.
 Escapes such as \\x06 are allowed on both sides. A '# t=12.5' comment sets the mount's clock to
 that many seconds, for commands whose answer depends on time (moves); --record writes them.
+The site's clock starts at 2026-01-01 00:00:00 UTC and moves with the same fake clock.
 """
 import codecs
 import logging
@@ -12,9 +13,11 @@ from pathlib import Path
 
 from mountd.fake import FakeMount
 from mountd.session import Session
+from mountd.site import Site
 from tests.test_fake import Clock
 
 CONVERSATIONS = Path(__file__).resolve().parents[2] / "conversations"
+EPOCH = 1767225600                                              # 2026-01-01 00:00:00 UTC
 
 
 def unescape(text):
@@ -50,7 +53,8 @@ class Conversations(unittest.TestCase):
         for path in files:
             with self.subTest(path.name):
                 text, clock = path.read_text(), Clock()
-                session, ticks = Session(FakeMount(clock=clock)), times(text)
+                site = Site(clock=lambda: EPOCH + clock())
+                session, ticks = Session(FakeMount(clock=clock), site), times(text)
                 for n, sent, expected in exchanges(text, path.name):
                     while ticks and ticks[0][0] < n:
                         clock.t = ticks.pop(0)[1]
