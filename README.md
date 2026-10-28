@@ -129,7 +129,7 @@ with a threaded barrel), only the lens is needed.
   boards on edge (their LEDs show the stepping). The **RA motor** hangs under
   the plate and its pinion walks round the fixed wheel.
 - **Head**: Pi 3B on pegs, clamped by the lid's posts (no screws); the camera
-  behind a lens window; IMU and compass on edge in grooved ribs on the lid; two
+  behind a lens window; the IMU flat on two pegs on the lid, the compass on edge in a grooved rib; two
   snap hooks. Hex sockets take the **Dec stub** (with the 60-tooth Dec wheel)
   and the hollow **cable stub**, held by a circlip inside.
 - **Hood**: sized exactly to the 53.5° × 41.4° field (plus 1.5°), with the

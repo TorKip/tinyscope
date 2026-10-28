@@ -10,9 +10,10 @@ as I go (G6, the article).*
 | Raspberry Pi 3B | 1 | yes | |
 | microSD card, ≥ 16 GB | 1 | ? | Raspberry Pi OS Lite 64-bit |
 | Pi camera v2.1 (IMX219) + its ribbon | 1 | yes | measure the board's holes before printing (`CAM_HOLES`) |
-| 28BYJ-48 5 V stepper + ULN2003 board | 2 | ? | often sold as a pair |
-| SG90 servo | 1 | ? | for the lens cap (darks); with its screws |
-| GY-BMI160 IMU | 1 | **to buy** | in the head; homing and levelling. Measure the board before printing the lid |
+| 28BYJ-48 5 V stepper + ULN2003 board | 2 | yes | often sold as a pair |
+| SG90 servo | 1 | yes | for the lens cap (darks); one of its screws, at the shaft end |
+| GY-BMI160 IMU | 1 | yes | in the head, flat on two pegs; homing and levelling. Measure its holes before printing the lid (`IMU_HOLES`) |
+| 2.54 mm right-angle header, 7 pins | 1 | ? | for the IMU (a straight header with plugs is too tall); or solder 4 wires to the pads |
 | ~~GY-271 compass~~ | 0 | | left out for now (2026-10-22); phone + arrow instead |
 | ~~MLX90614 BCC IR sensor~~ | 0 | | later, as an experiment (docs/benchmarks.md) |
 | USB power bank, 5 V ≥ 2 A | 1 | ? | |
@@ -32,9 +33,10 @@ as I go (G6, the article).*
 ## Tools
 
 Soldering iron (harness), multimeter (check 5 V and GND before first power-up),
-CA glue (pinions if loose), a flush cutter.
+CA glue (pinions if loose), hot glue (IMU, ULN boards), a flush cutter.
 
 ## Total to buy now
 
-The GY-BMI160 only. The M3 × 10s are optional (M3 is the most useful size to
+Nothing essential (2026-10-28: the GY-BMI160 has arrived). A right-angle header if
+there isn't one in the drawer. The M3 × 10s are optional (M3 is the most useful size to
 keep in stock anyway).

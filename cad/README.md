@@ -20,7 +20,7 @@ come out in `cad/out/stl/`, already in print orientation; STEP files hold the th
 | `ra_pinion`, `dec_pinion` | 2 | flat | PETG, 100% | double-D bore 5/3 mm; press on, CA if loose |
 | `fork` | 1 | plate down | PLA/PETG, 4 walls | the big one; bridges: motor pocket (from below), cable tunnel, channel bridges |
 | `head_body` | 1 | front face down | PLA/PETG | camera pegs can be heat-staked |
-| `head_lid` | 1 | outer face down | PETG (snap hooks) | posts clamp the Pi |
+| `head_lid` | 1 | outer face down | PETG (snap hooks) | posts clamp the Pi; IMU pegs |
 | `hood` | 1 | plate down | any, black if you can | sized to the field +1.5° |
 | `lens_cap` | 1 | cap down | any, black | press on the SG90 spline, horn screw |
 | `dec_stub`, `cable_stub` | 1 + 1 | axis vertical | PETG, 100% | Dec journals Ø22 |
@@ -39,7 +39,8 @@ over a third of it; a heavier foot steadies the tripod).
    meshes as the motor goes in; push pins from below.
 3. ULN2003 boards into the deck slots, components outward.
 4. Head: camera onto its pegs, ribbon folded round the Pi's lower edge to the CSI connector,
-   Pi onto its pegs. IMU into the lid's groove (the second groove is for an optional compass). Jumpers onto the GPIO.
+   Pi onto its pegs. IMU flat on the lid's two pegs, 7-pin row away from them, a dab of hot glue on each
+   peg (the groove is for an optional compass). Jumpers onto the GPIO.
 5. Head between the tines. Dec stub in from the right, Dec wheel on its hex. Cable stub in from
    the left, circlip on inside the head. Lid on (snap).
 6. Dec motor on the bracket with its pinion on, so the pinion meshes; push pins.
@@ -61,4 +62,7 @@ chosen from the head's swing (the check reports the closest pass).
 - the head clears the fork, wheel, clip and hub from Dec −35° to 100°;
 - the fork, motors, boards and head (at three Dec angles) clear the foot through a full RA turn;
 - nothing that turns comes lower than 12 mm above the tripod plate;
-- gear centre distance and the step size quoted in the README.
+- gear centre distance and the step size quoted in the README;
+- the bought parts (motors, boards, Pi, camera, IMU, servo) fit their printed parts, with
+  known press fits listed in `PRESSED`;
+- the servo drops into the hood with its cable, at every height on the way in.
