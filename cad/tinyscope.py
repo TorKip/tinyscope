@@ -98,8 +98,12 @@ LENS_SQ = 9.0                 # lens module, square
 CAM_FLEX = (-6.5, 6.5, 4.0, 12.3)   # (x0, x1, z0, z1) of the module's flex + connector on the PCB front
 DOWELS = [(-17.0, -15.0), (-17.0, 24.0)]   # 1.75 mm filament pins, hood ↔ head
 FIL_HOLE = 1.85
-IMU_BOARD = (13.0, 18.0, 1.6)   # GY-BMI160 width (along the rib), height, PCB thickness: MEASURE yours
-IMU_RIB = (-28.0, -4.0)         # x of the IMU's rib on the lid; the board's end sits on the stop at -28
+# GY-BMI160, from the photos (pin pitch as the scale): MEASURE yours. Length along the pin rows,
+# width, PCB; two holes on the 5-pin edge, the 7-pin row (VIN … SA0) on the far edge
+IMU_BOARD = (17.5, 12.7, 1.6)
+IMU_HOLES = (14.0, 4.3, 2.8)    # spacing, centres from the 5-pin edge, diameter
+IMU_AT = (-19.0, -14.0)         # on the lid: x of the board's centre, z of its 5-pin edge (7-pin edge at +z)
+IMU_STANDOFF = 3.5              # board's underside above the lid: room for the header's pin tails
 HOOD_END = 44.5               # hood mouth (y); lens front ≈ 20.3
 SERVO = (8.0, 20.0)           # SG90 shaft (x, z) on the hood
 SERVO_FLOOR = HY + 2.4        # hood plate top, the servo's bottom
@@ -381,7 +385,8 @@ def head_body():
 
 def head_lid():
     """Back lid: lip into the opening, two snap hooks, four posts that clamp the Pi onto its pegs,
-    and two grooved ribs that hold the IMU and compass boards on edge. Prints outer face down."""
+    two pegs and a pad the IMU sits flat on, and a grooved rib that holds the compass board on edge.
+    Prints outer face down."""
     lid = fillet(B(-HX, HX, -HY, BACK, -HZ, HZ).edges().filter_by(Axis.Y), 4)
     lip = B(-HX + WALL + 0.2, HX - WALL - 0.2, BACK - 0.01, BACK + 3, -HZ + WALL + 0.2, HZ - WALL - 0.2)
     lip -= B(-HX + WALL + 1.8, HX - WALL - 1.8, BACK - 1, BACK + 4, -HZ + WALL + 1.8, HZ - WALL - 1.8)
@@ -399,14 +404,18 @@ def head_lid():
     for x, z in PI_HOLES:                                                 # clamp posts (hollow for the peg tips)
         post = cyl_z(2.3, BACK - 0.01, PI_Y - 1.4 + 0.1) - cyl_z(1.5, PI_Y - 4, PI_Y)
         lid += Pos(x, 0, z) * Rot(-90, 0, 0) * post
-    gi = IMU_BOARD[2] / 2 + 0.05                                         # IMU groove: PCB + 0.1
-    for (x0, x1), g in ((IMU_RIB, gi), ((2, 24), 0.85)):                  # sensor ribs
-        lid += B(x0, x1, BACK - 0.01, BACK + 4, -10, -6) - B(x0 - 1, x1 + 1, BACK + 1, BACK + 5, -8 - g, -8 + g)
-    # index for the IMU: a stop closing its groove at -x, and an engraved arrow on the lid pointing
-    # at it. The board goes in the same way every time; the last degrees come from calibration
-    x0 = IMU_RIB[0]
-    lid += B(x0, x0 + 1.2, BACK - 0.01, BACK + 4, -10, -6)
-    lid -= frame((0, BACK - 0.4, 0), (1, 0, 0), (0, 1, 0)) * extrude(poly((x0 + 2, 3.5), (x0 + 6, 2.0), (x0 + 6, 5.0)), 0.5)
+    x0, x1 = 2, 24                                                        # compass rib, 1.7 groove
+    lid += B(x0, x1, BACK - 0.01, BACK + 4, -10, -6) - B(x0 - 1, x1 + 1, BACK + 1, BACK + 5, -8.85, -7.15)
+    # IMU: the board's own holes on two pegs, standing on their pads and a third pad, so the board
+    # can only go on one way and always lies in the same plane. A dab of hot glue on each peg holds it
+    cx, ze = IMU_AT
+    top = BACK + IMU_STANDOFF
+    for s in (-1, 1):
+        x, z = cx + s * IMU_HOLES[0] / 2, ze + IMU_HOLES[1]
+        peg = cyl_z(2.2, BACK - 0.01, top) + cyl_z(1.2, top - 0.01, top + 2.2)
+        peg += Pos(0, 0, top + 2.2) * Cone(1.2, 0.8, 0.4, align=CCM)   # chamfered tip
+        lid += Pos(x, 0, z) * Rot(-90, 0, 0) * peg
+    lid += B(cx - 1.5, cx + 1.5, BACK - 0.01, top, ze + 6.5, ze + 9.5)    # third pad, clear of the pin tails
     return lid
 
 
@@ -532,6 +541,18 @@ def sg90():
     return s
 
 
+def imu_board():
+    """GY-BMI160 lying flat: x along the pin rows, 5-pin edge at y = 0, underside z = 0. Includes a
+    keep-out for the wires: a right-angle header on the 7-pin row with housings lying flat beyond
+    the edge (wires soldered straight onto the pads take less)."""
+    L, W, t = IMU_BOARD
+    b = B(-L / 2, L / 2, 0, W, 0, t)
+    for s in (-1, 1):
+        b -= cyl_z(IMU_HOLES[2] / 2, -1, t + 1, x=s * IMU_HOLES[0] / 2, y=IMU_HOLES[1])
+    b += B(-8.9, 8.9, W - 2.6, W + 15.0, t, t + 2.6)                       # header + housings
+    return b
+
+
 def sensor_board(w, h):
     return B(-w / 2, w / 2, 0, h, 0, 1.6)
 
@@ -572,8 +593,7 @@ def build():
         "jumpers": (frame((0, PI_Y, 0), (1, 0, 0), (0, -1, 0)) * dupont_block(), "bought"),
         "camera": (frame((0, CAM_Y, 0), (-1, 0, 0), (0, 1, 0)) * cam_v2(), "bought"),
         "servo": (frame((SERVO[0], SERVO_FLOOR, SERVO[1]), (1, 0, 0), (0, 1, 0)) * sg90(), "bought"),
-        "imu": (frame((IMU_RIB[0] + 1.2 + IMU_BOARD[0] / 2, BACK + 1.0, -8 - IMU_BOARD[2] / 2), (1, 0, 0), (0, 0, 1))
-                * sensor_board(IMU_BOARD[0], IMU_BOARD[1]), "bought"),
+        "imu": (frame((IMU_AT[0], BACK + IMU_STANDOFF, IMU_AT[1]), (-1, 0, 0), (0, 1, 0)) * imu_board(), "bought"),
         "compass": (frame((13, BACK + 1.0, -8 - 0.8), (1, 0, 0), (0, 0, 1)) * sensor_board(14, 18), "bought"),
     }
     return {"fixed": fixed, "ra": ra, "head": head}

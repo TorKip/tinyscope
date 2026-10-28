@@ -50,9 +50,9 @@ def pieces(parts):
         ),
         "imu_test": (
             ts.print_pose("head_lid", parts["head_lid"][0] & _imu_box()),
-            "the IMU's groove, its end stop and the index arrow, on a strip of the lid",
-            "MEASURE the board first (IMU_BOARD). Push it in, far edge to the groove floor, end against the stop: "
-            "it stands square and stays put upside down, but comes out by hand. Note which way its X/Y arrows point",
+            "the IMU's pegs and pads, on a strip of the lid",
+            "the board's holes go over the pegs without forcing and it lies flat on all three pads, "
+            "7-pin row away from the pegs. Loose is fine (hot glue); tight or off: MEASURE (IMU_BOARD, IMU_HOLES)",
         ),
         "camera_test": (
             head & _camera_box(head_raw),
@@ -63,9 +63,9 @@ def pieces(parts):
 
 
 def _imu_box():
-    """The IMU's rib with a strip of the lid under it (head frame: the lid is y -HY..BACK)."""
-    x0, x1 = ts.IMU_RIB
-    return ts.B(x0 - 3, x1 + 2, -ts.HY - 1, ts.BACK + 5, -12, -1)
+    """The IMU's pegs and pads with a strip of the lid under them (head frame: the lid is y -HY..BACK)."""
+    (cx, ze), (L, W, _) = ts.IMU_AT, ts.IMU_BOARD
+    return ts.B(cx - L / 2 - 2, cx + L / 2 + 2, -ts.HY - 1, ts.BACK + 10, ze - 2, ze + W + 2)
 
 
 def _camera_box(part):
