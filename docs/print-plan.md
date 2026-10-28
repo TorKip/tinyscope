@@ -35,7 +35,7 @@ Status: what I know has been printed; **reprint** = the design changed after the
 | `push_pin_ra` | 2 | PETG | 0.1 each | 1 | |
 | `ra_pinion` | 1 | PETG, 100 % | 0.6 | 1 | |
 | `foot` | 1 | PLA/PETG, 4 walls | 170.4 | 2 | |
-| `hub` | 1 | PETG, 4 walls, 40 % | 16.5 | 2 | |
+| `hub` | 1 | PETG, 4 walls, 40 % | 16.5 | 2 | **reprint** (pin slot, 2026-10-28) |
 | `ra_wheel` | 1 | PLA/PETG | 17.0 | 2 | |
 | `ra_clip` | 1 | PETG | 0.3 | 2 | |
 | `fork` | 1 | PLA/PETG, 4 walls | 113.1 | 2 | |

@@ -44,6 +44,9 @@ FLANGE_R = 19.0
 KEY_AF = 20.0                 # hub's hex key into the column
 KEY_Z = (-15.0, -9.0)         # key; a 45° cone from its flats (r 10) joins it to the flange (r 19)
 BORE = 15.0                   # cable bore through column and hub
+# the hub's half of the pin hole is a slot, longer down than up: the printed hub sat ~0.5 high in the
+# foot (its 45° cone is an overhang that droops, the foot's cone prints stepped), so the halves missed
+HUB_PIN_SLOT = (-0.8, 0.3)    # slot ends below/above the foot's hole centre (2026-10-28)
 PLATE = (3.0, 8.0)            # fork plate
 JOURNAL_D = 28.0              # spindle, the RA plain bearing
 SPIN_HEX = 24.0               # spindle hex the RA wheel keys on
@@ -215,7 +218,9 @@ def hub():
     h += cyl_z(TOP_D / 2, WHEEL_Z[1], SPIN_TOP)
     h -= cyl_z(TOP_D, GROOVE[0], GROOVE[1]) - cyl_z(GROOVE_D / 2, GROOVE[0], GROOVE[1])
     h -= cyl_z(BORE / 2, KEY_Z[0] - 1, SPIN_TOP + 1)
-    h -= cyl_x(FIL_HOLE / 2, -30, 30, y=KEY_AF / 2, z=sum(KEY_Z) / 2)
+    zp, r = sum(KEY_Z) / 2, FIL_HOLE / 2
+    lo, hi = zp + HUB_PIN_SLOT[0], zp + HUB_PIN_SLOT[1]
+    h -= cyl_x(r, -30, 30, y=KEY_AF / 2, z=lo) + cyl_x(r, -30, 30, y=KEY_AF / 2, z=hi) + B(-30, 30, KEY_AF / 2 - r, KEY_AF / 2 + r, lo, hi)
     return h
 
 
