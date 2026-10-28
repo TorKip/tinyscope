@@ -67,6 +67,7 @@ BYJ_R, BYJ_DEPTH, BYJ_OFFSET = 14.0, 19.0, 8.0
 BYJ_EARS, BYJ_EAR_W, BYJ_EAR_HOLE = 35.0, 7.0, 4.2
 BYJ_BOSS = (9.0, 1.5)
 BYJ_SHAFT, BYJ_FLATS, BYJ_SHAFT_LEN = 5.0, 3.0, 9.5
+BORE_FIT = 0.1                # pinion bore play per side; 0.05 printed a little too tight (2026-10-28)
 RA_SHAFT = (-36.0, 0.0)       # RA motor shaft in mount xy; body radially outward, at x -44
 RA_FACE = 5.0                 # motor face 2 mm up in a pocket under the plate, so the shaft reaches the wheel
 
@@ -160,8 +161,8 @@ def frame(origin, x_dir, z_dir):
 
 
 def double_d_bore(z0, z1):
-    r = BYJ_SHAFT / 2 + 0.05
-    flat = BYJ_FLATS / 2 + 0.05
+    r = BYJ_SHAFT / 2 + BORE_FIT
+    flat = BYJ_FLATS / 2 + BORE_FIT
     return cyl_z(r, z0, z1) & B(-r, r, -flat, flat, z0, z1)
 
 
