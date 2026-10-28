@@ -52,6 +52,7 @@ TOP_D, GROOVE_D, GROOVE = 22.0, 19.6, (14.5, 15.9)   # spindle top and its circl
 SPIN_TOP = 18.0
 CLEAR = 0.2                   # sliding fit, per side
 FIT = 0.15                    # snug fit, per side
+LAYER = 0.2                   # print layer height (stepped bridges)
 
 # ---------- gears: module 1, 60:12 = 5:1 on both axes ----------
 M, ZW, ZP = 1.0, 60, 12
@@ -272,12 +273,26 @@ def fork():
     # RA motor: pocket for the face and ears (2 deep, from below), boss hole, ear pin holes
     sx, sy = RA_SHAFT
     cx = sx - BYJ_OFFSET
-    pocket = cyl_z(BYJ_R + 0.3, z0 - 1, RA_FACE, x=cx)
-    pocket += B(cx - BYJ_EAR_W / 2 - 0.3, cx + BYJ_EAR_W / 2 + 0.3, -BYJ_EARS / 2, BYJ_EARS / 2, z0 - 1, RA_FACE)
+
+    def outline(top):
+        o = cyl_z(BYJ_R + 0.3, z0 - 1, top, x=cx)
+        o += B(cx - BYJ_EAR_W / 2 - 0.3, cx + BYJ_EAR_W / 2 + 0.3, -BYJ_EARS / 2, BYJ_EARS / 2, z0 - 1, top)
+        for y in (-BYJ_EARS / 2, BYJ_EARS / 2):
+            o += cyl_z(BYJ_EAR_W / 2 + 0.3, z0 - 1, top, x=cx, y=y)
+        # the blue wire cover sticks out 3.5 past the can and reaches (about) the face
+        return o + B(cx - BYJ_R - 3.5 - 0.3, cx - BYJ_R + 3.5, -7.5 - 0.3, 7.5 + 0.3, z0 - 1, top)
+
+    pocket = outline(RA_FACE)
     for y in (-BYJ_EARS / 2, BYJ_EARS / 2):
-        pocket += cyl_z(BYJ_EAR_W / 2 + 0.3, z0 - 1, RA_FACE, x=cx, y=y)
         pocket += cyl_z(BYJ_EAR_HOLE / 2 - 0.1, z0 - 1, z1 + 1, x=cx, y=y)
     pocket += cyl_z(BYJ_BOSS[0] / 2 + 0.5, z0 - 1, z1 + 1, x=sx, y=sy)
+    # stepped bridges over the holes in the ceiling: the first layer bridges in x with a slot over
+    # each hole, the second bridges the slot in y, and only then do the round holes start. A bridge
+    # with a hole in it has nothing to anchor its lines to round the hole, so they sag into strings.
+    steps = outline(RA_FACE + 2 * LAYER)
+    for x, y, d in ((sx, sy, BYJ_BOSS[0] + 1.0), (cx, -BYJ_EARS / 2, BYJ_EAR_HOLE - 0.2), (cx, BYJ_EARS / 2, BYJ_EAR_HOLE - 0.2)):
+        pocket += steps & B(cx - 30, cx + 30, y - d / 2, y + d / 2, RA_FACE - 0.01, RA_FACE + LAYER)
+        pocket += B(x - d / 2, x + d / 2, y - d / 2, y + d / 2, RA_FACE - 0.01, RA_FACE + 2 * LAYER)
     f -= pocket
     # ULN2003 deck: a grooved rib and three slotted posts hold two boards on edge
     ux0, ux1 = ULN_X - ULN[2] - 0.15 - 2.0, ULN_X + 0.15 + 2.0          # rib, 2 mm walls each side of the groove
@@ -414,9 +429,10 @@ def hood():
     box = B(bx0 - 5, bx1 + 5, y1 - 0.01, ear_y, bz0 - 1.6, bz1 + 1.6) - B(bx0, bx1, y1 - 1, ear_y + 1, bz0, bz1)
     h += box
     h -= frustum(6, 5, wx, wz, pad=1)                                     # keep the field clear of the box
-    for x in (sx - 6.0 - 2.35, sx + 16.8 + 2.35):
-        h -= Pos(x, 0, sz) * Rot(90, 0, 0) * cyl_z(0.9, -ear_y - 1, -ear_y + 8)
+    # one screw at the shaft end: the cable channel takes the other end's screw hole
+    h -= Pos(sx - 6.0 - 2.35, 0, sz) * Rot(90, 0, 0) * cyl_z(0.9, -ear_y - 1, -ear_y + 8)
     h -= B(24.5, 28.5, y0 - 1, y1 + 4, 16, 24.5)                          # wire slot into the head
+    h -= B(24.5, 28.5, y0 - 1, ear_y + 1, sz - 2.4, sz + 2.4)             # cable channel, top to slot
     for x, z in DOWELS:
         h -= Pos(x, 0, z) * Rot(-90, 0, 0) * cyl_z(FIL_HOLE / 2, y0 - 1, y1 + 1)
     return h, (wx, wz)
@@ -498,8 +514,10 @@ def uln2003():
 
 
 def sg90():
-    """Shaft on z at the origin, bottom of the case z = 0."""
+    """Shaft on z at the origin, bottom of the case z = 0. The cable leaves the far end low down
+    (ribbon 3.6 × 1.2, MEASURE yours) and is drawn bent straight down, as it goes into the hood."""
     s = B(-6.0, 16.8, -6.1, 6.1, 0, 22.7)
+    s += B(16.8, 18.6, -1.8, 1.8, 2.4, 3.6) + B(17.4, 18.6, -1.8, 1.8, -8.0, 3.6)
     s += B(-10.7, 21.5, -6.1, 6.1, 15.9, 18.4)
     s += cyl_z(5.9, 22.7, 26.7) & B(-6.0, 6, -6.1, 6.1, 22.7, 26.7)
     s += cyl_z(2.4, 26.7, 30.0)

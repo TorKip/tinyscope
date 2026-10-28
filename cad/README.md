@@ -43,7 +43,7 @@ over a third of it; a heavier foot steadies the tripod).
 5. Head between the tines. Dec stub in from the right, Dec wheel on its hex. Cable stub in from
    the left, circlip on inside the head. Lid on (snap).
 6. Dec motor on the bracket with its pinion on, so the pinion meshes; push pins.
-7. Hood onto the front with two filament pins, servo into its box (its own screws), cap on
+7. Hood onto the front with two filament pins, servo into its box with the cable bent down into the channel at the cable end (one screw, at the shaft end), cap on
    the spline with the servo at the "closed" end.
 
 ## Frames and numbers

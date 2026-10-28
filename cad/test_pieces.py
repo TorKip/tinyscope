@@ -79,8 +79,9 @@ def worst_overhang(face):
     return worst
 
 
-# bridges the parent parts already accept (see ALLOWED in test_tinyscope.py), by size
-BRIDGES = [(28.6, 42.6)]
+# bridges the parent parts already accept (see ALLOWED and ZONES in test_tinyscope.py): the RA motor
+# pocket's ceiling and its stepped bridges, everything facing down up to two layers over the face
+POCKET_TOP = ts.RA_FACE - ts.PLATE[0] + 2 * ts.LAYER + 0.01
 
 
 def problems(name, shape):
@@ -95,7 +96,7 @@ def problems(name, shape):
             continue                   # the thread's flanks
         if worst_overhang(f) <= 46.5:
             continue
-        if any(abs(bb.size.X - sx) < 0.3 and abs(bb.size.Y - sy) < 0.3 for sx, sy in BRIDGES):
+        if name == "ra_motor_test" and bb.max.Z <= POCKET_TOP:
             continue
         out.append(f"{name}: face {bb.size.X:.1f} × {bb.size.Y:.1f} at z {bb.min.Z:.1f} overhangs")
     return out

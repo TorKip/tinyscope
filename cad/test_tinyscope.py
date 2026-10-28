@@ -23,7 +23,6 @@ ALLOWED = {
     "foot": [("cable groove's roof, under the foot", 7.0, 24.59, "a 7 mm bridge")],
     "hub": [("circlip groove's upper face", 22.0, 22.0, "a 1.2 mm ring; it is the face the clip bears on, so it stays square")],
     "fork": [
-        ("RA motor pocket's ceiling (2 mm deep, from below)", 28.6, 42.6, "a 28.6 mm bridge, fine on a Bambu"),
         ("power-cable tunnel's roof through the left tine root", 5.0, 8.0, "an 8 mm bridge"),
         ("ribbon channel bridges", 1.6, 14.0, "14 mm bridges"),
         ("ribbon channel's top end", 2.4, 14.0, "a 14 mm bridge"),
@@ -33,7 +32,6 @@ ALLOWED = {
         ("snap-hook windows' roofs", 13.0, 2.4, "13 mm bridges"),
     ],
     "head_lid": [("snap hooks' catch faces", 12.0, 0.6, "0.6 mm ledges")],
-    "hood": [("servo wire slot's roof in the end wall", 3.5, 8.5, "a 3.5 mm bridge")],
     "dec_stub": [("journal's underside round the hex key", 22.0, 22.0, "a ring up to 2 mm wide from the hex flats")],
     "cable_stub": [("circlip groove's upper face", 17.0, 17.0, "a 1 mm ring")],
     "lens_cap": [
@@ -45,6 +43,22 @@ ALLOWED = {
 failed = 0
 GROUPS = ms.build()
 PARTS = {k: v for g in GROUPS.values() for k, v in g.items()}
+
+
+def _pocket_zone():
+    """The RA motor pocket's ceiling, in the fork's print pose (the pose only shifts the fork)."""
+    fork = PARTS["fork"][0]
+    shift = ms.print_pose("fork", fork).bounding_box().min - fork.bounding_box().min
+    cx = ms.RA_SHAFT[0] - ms.BYJ_OFFSET
+    return (cx - ms.BYJ_R - 4.0 + shift.X, cx + ms.BYJ_R + 0.5 + shift.X, -ms.BYJ_EARS / 2 - 4.0 + shift.Y,
+            ms.BYJ_EARS / 2 + 4.0 + shift.Y, ms.RA_FACE + 2 * ms.LAYER + 0.01 + shift.Z)
+
+
+# part: [(what, (x0, x1, y0, y1, z_top), reason)]: flagged faces inside the box (print pose) we accept
+ZONES = {
+    "fork": [("RA motor pocket's ceiling and its stepped bridges (from below)", _pocket_zone(),
+              "a 32 mm bridge over the can + wire cover; the holes in it start two layers up")],
+}
 
 
 def test(name, fn):
@@ -73,7 +87,7 @@ def worst_overhang(face):
     return worst, z
 
 
-def problems(name, shape, allowed=()):
+def problems(name, shape, allowed=(), zones=()):
     out, used = [], set()
     for f in shape.faces():
         worst, _ = worst_overhang(f)
@@ -91,16 +105,22 @@ def problems(name, shape, allowed=()):
                 used.add(k)
                 break
         else:
+            zone = next((k for k, (_, (x0, x1, y0, y1, zt), _) in enumerate(zones)
+                         if x0 <= bb.min.X and bb.max.X <= x1 and y0 <= bb.min.Y and bb.max.Y <= y1 and bb.max.Z <= zt), None)
+            if zone is not None:
+                used.add(("zone", zone))
+                continue
             out.append(f"{name}: {f.geom_type.name.lower()} face at z {bb.min.Z:.2f}–{bb.max.Z:.2f}, "
                        f"{bb.size.X:.2f} × {bb.size.Y:.2f} at ({bb.center().X:.1f}, {bb.center().Y:.1f}), overhangs {worst:.0f}°")
     stale = [f"{name}: ALLOWED '{a[0]}' matches no face" for k, a in enumerate(allowed) if k not in used]
+    stale += [f"{name}: ZONES '{a[0]}' holds no face" for k, a in enumerate(zones) if ("zone", k) not in used]
     return out, stale
 
 
 def printable():
     bad = []
     for name in ms.PRINTED:
-        out, stale = problems(name, ms.print_pose(name, PARTS[name][0]), ALLOWED.get(name, ()))
+        out, stale = problems(name, ms.print_pose(name, PARTS[name][0]), ALLOWED.get(name, ()), ZONES.get(name, ()))
         bad += out + stale
     assert not bad, "\n      ".join(bad)
 
@@ -109,7 +129,7 @@ def catches_upside_down():
     for name in ("hood", "head_lid", "fork"):
         flipped = Rot(180, 0, 0) * ms.print_pose(name, PARTS[name][0])
         flipped = Pos(0, 0, -flipped.bounding_box().min.Z) * flipped
-        out, _ = problems(name, flipped, ALLOWED.get(name, ()))
+        out, _ = problems(name, flipped, ALLOWED.get(name, ()), ZONES.get(name, ()))
         assert out, f"{name} upside down passed"
 
 
@@ -205,6 +225,40 @@ def tripod_head_clear():
     assert low > 12, low
 
 
+# bought parts that sit inside a printed part by design, with the overlap the model has (mm³)
+PRESSED = {("ra_motor", "ra_pinion"): 30, ("pi", "head_lid"): 5, ("servo", "lens_cap"): 6}
+
+
+def bought_parts_fit():
+    """Each bought part against the printed parts of its own group, as assembled."""
+    bad = []
+    for g in GROUPS.values():
+        for b, (bs, kind) in g.items():
+            if kind != "bought":
+                continue
+            for p, (ps, k2) in g.items():
+                if k2 == "bought":
+                    continue
+                v = (bs & ps).volume
+                if v > PRESSED.get((b, p), 0.01):
+                    bb = (bs & ps).bounding_box()
+                    bad.append(f"{b} in {p}: {v:.1f} mm³ at x {bb.min.X:.1f}…{bb.max.X:.1f}, "
+                               f"y {bb.min.Y:.1f}…{bb.max.Y:.1f}, z {bb.min.Z:.1f}…{bb.max.Z:.1f}")
+    assert not bad, "\n      ".join(bad)
+
+
+def servo_drops_in():
+    """The SG90 goes into the hood's box from above with its cable already bent down, so the cable
+    needs room at every height on the way, not only where it ends up."""
+    hood, servo = PARTS["hood"][0], PARTS["servo"][0]
+    bad = []
+    for d in range(0, 20, 2):
+        v = (Pos(0, d, 0) * servo & hood).volume
+        if v > 0.01:
+            bad.append(f"{d} mm above home: {v:.1f} mm³")
+    assert not bad, "\n      ".join(bad)
+
+
 def gears_and_numbers():
     assert abs(ms.CD - 36.0) < 1e-9
     steps = 4096 * 63.68395 / 64 * ms.ZW / ms.ZP           # half-steps per axis turn (gearbox is 63.684:1)
@@ -219,6 +273,8 @@ test("every printed part prints without supports (bar the listed bridges)", prin
 test("the check catches the hood, lid and fork upside down", catches_upside_down)
 test("every printed part fits a 256 mm bed", fits_the_bed)
 test("gear centre distance and step size", gears_and_numbers)
+test("the motors, boards, Pi and camera fit their printed parts", bought_parts_fit)
+test("the servo drops into the hood with its cable", servo_drops_in)
 if "--print-only" in sys.argv:
     sys.exit(1 if failed else 0)
 test("the head clears the fork through Dec −35°…100°", head_clears_the_fork)
