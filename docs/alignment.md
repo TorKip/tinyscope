@@ -51,3 +51,21 @@ pointing model measured from the sky (the classic tool is called TPoint).
 
 Each step's accuracy is a benchmark: log the IMU's and compass's guesses next
 to the plate solve's truth, every session.
+
+## Where the IMU sits (its index)
+
+Only the IMU's *orientation* matters: gravity is the same everywhere in the head, so where
+the board sits doesn't change what it reads. Two layers:
+
+1. **Mechanical:** the board stands on edge in the groove of the lid's left rib (slot **S1**),
+   its far edge on the groove floor and its end against the stop. The engraved arrow on the
+   lid points at the stop. Same way in every time, square to within a degree or two.
+2. **Calibration:** the last degrees (three small angles between the IMU and the camera) are
+   measured from plate solves: log the IMU's gravity reading and the solved pointing in a
+   few poses and solve for the rotation. Stored with its date; redo it if the board comes out.
+
+| Slot | Board | Board +X → head | Board +Y → head | Board +Z → head | Calibrated |
+|---|---|---|---|---|---|
+| S1 (left rib, stop at −x) | GY-BMI160 | *fill in from the silkscreen* | | | not yet |
+
+The head frame is the CAD's: x = Dec axis, y = optical axis (out of the lens), z completes it.

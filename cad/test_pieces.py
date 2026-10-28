@@ -48,12 +48,24 @@ def pieces(parts):
             "the two ULN2003 slots",
             "slide both boards in: they stay put upside down but come out by hand",
         ),
+        "imu_test": (
+            ts.print_pose("head_lid", parts["head_lid"][0] & _imu_box()),
+            "the IMU's groove, its end stop and the index arrow, on a strip of the lid",
+            "MEASURE the board first (IMU_BOARD). Push it in, far edge to the groove floor, end against the stop: "
+            "it stands square and stays put upside down, but comes out by hand. Note which way its X/Y arrows point",
+        ),
         "camera_test": (
             head & _camera_box(head_raw),
             "the camera pegs, the lens window and the flex pocket",
             "the camera board presses onto the pegs and the lens sits centred in the window. MEASURE your board's holes first (CAM_HOLES)",
         ),
     }
+
+
+def _imu_box():
+    """The IMU's rib with a strip of the lid under it (head frame: the lid is y -HY..BACK)."""
+    x0, x1 = ts.IMU_RIB
+    return ts.B(x0 - 3, x1 + 2, -ts.HY - 1, ts.BACK + 5, -12, -1)
 
 
 def _camera_box(part):

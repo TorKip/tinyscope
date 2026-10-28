@@ -98,6 +98,8 @@ LENS_SQ = 9.0                 # lens module, square
 CAM_FLEX = (-6.5, 6.5, 4.0, 12.3)   # (x0, x1, z0, z1) of the module's flex + connector on the PCB front
 DOWELS = [(-17.0, -15.0), (-17.0, 24.0)]   # 1.75 mm filament pins, hood ↔ head
 FIL_HOLE = 1.85
+IMU_BOARD = (13.0, 18.0, 1.6)   # GY-BMI160 width (along the rib), height, PCB thickness: MEASURE yours
+IMU_RIB = (-28.0, -4.0)         # x of the IMU's rib on the lid; the board's end sits on the stop at -28
 HOOD_END = 44.5               # hood mouth (y); lens front ≈ 20.3
 SERVO = (8.0, 20.0)           # SG90 shaft (x, z) on the hood
 SERVO_FLOOR = HY + 2.4        # hood plate top, the servo's bottom
@@ -397,8 +399,14 @@ def head_lid():
     for x, z in PI_HOLES:                                                 # clamp posts (hollow for the peg tips)
         post = cyl_z(2.3, BACK - 0.01, PI_Y - 1.4 + 0.1) - cyl_z(1.5, PI_Y - 4, PI_Y)
         lid += Pos(x, 0, z) * Rot(-90, 0, 0) * post
-    for x0, x1 in ((-28, -4), (2, 24)):                                   # sensor ribs, 1.7 groove
-        lid += B(x0, x1, BACK - 0.01, BACK + 4, -10, -6) - B(x0 - 1, x1 + 1, BACK + 1, BACK + 5, -8.85, -7.15)
+    gi = IMU_BOARD[2] / 2 + 0.05                                         # IMU groove: PCB + 0.1
+    for (x0, x1), g in ((IMU_RIB, gi), ((2, 24), 0.85)):                  # sensor ribs
+        lid += B(x0, x1, BACK - 0.01, BACK + 4, -10, -6) - B(x0 - 1, x1 + 1, BACK + 1, BACK + 5, -8 - g, -8 + g)
+    # index for the IMU: a stop closing its groove at -x, and an engraved arrow on the lid pointing
+    # at it. The board goes in the same way every time; the last degrees come from calibration
+    x0 = IMU_RIB[0]
+    lid += B(x0, x0 + 1.2, BACK - 0.01, BACK + 4, -10, -6)
+    lid -= frame((0, BACK - 0.4, 0), (1, 0, 0), (0, 1, 0)) * extrude(poly((x0 + 2, 3.5), (x0 + 6, 2.0), (x0 + 6, 5.0)), 0.5)
     return lid
 
 
@@ -564,7 +572,8 @@ def build():
         "jumpers": (frame((0, PI_Y, 0), (1, 0, 0), (0, -1, 0)) * dupont_block(), "bought"),
         "camera": (frame((0, CAM_Y, 0), (-1, 0, 0), (0, 1, 0)) * cam_v2(), "bought"),
         "servo": (frame((SERVO[0], SERVO_FLOOR, SERVO[1]), (1, 0, 0), (0, 1, 0)) * sg90(), "bought"),
-        "imu": (frame((-16, BACK + 1.0, -8 - 0.8), (1, 0, 0), (0, 0, 1)) * Pos(0, 0, 0) * sensor_board(13, 18), "bought"),
+        "imu": (frame((IMU_RIB[0] + 1.2 + IMU_BOARD[0] / 2, BACK + 1.0, -8 - IMU_BOARD[2] / 2), (1, 0, 0), (0, 0, 1))
+                * sensor_board(IMU_BOARD[0], IMU_BOARD[1]), "bought"),
         "compass": (frame((13, BACK + 1.0, -8 - 0.8), (1, 0, 0), (0, 0, 1)) * sensor_board(14, 18), "bought"),
     }
     return {"fixed": fixed, "ra": ra, "head": head}
