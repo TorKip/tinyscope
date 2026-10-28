@@ -26,7 +26,7 @@ for a 10-minute window.
 
 | Rung | What | Teaches |
 |---|---|---|
-| 0 | **tinyscope**: Pi 3B + camera v1 on a printed fork | The whole stack end to end, on hardware that can't break anything expensive |
+| 0 | **tinyscope**: Pi 3B + camera v2.1 on a printed fork | The whole stack end to end, on hardware that can't break anything expensive |
 | 1 | **mini-scope**: HQ camera, worm drives, the dome sketch | Precision mechanics, guiding, weather safety |
 | 2 | **EQ5 GoTo** (I have one) | A real mount through the same software (SynScan/EQMOD) |
 | 3 | **LX200 10"** (I have one) | Long focal length; the scope the LX200 protocol is named after |

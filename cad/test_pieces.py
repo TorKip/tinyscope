@@ -50,7 +50,7 @@ def pieces(parts):
         ),
         "camera_test": (
             head & _camera_box(head_raw),
-            "the camera pegs and the lens window",
+            "the camera pegs, the lens window and the flex pocket",
             "the camera board presses onto the pegs and the lens sits centred in the window. MEASURE your board's holes first (CAM_HOLES)",
         ),
     }
@@ -62,7 +62,7 @@ def _camera_box(part):
     raw = Rot(-90, 0, 0) * part
     c = raw.bounding_box().center()
     x, y = -c.X, -c.Y
-    return ts.B(x - 17, x + 17, y - 10, y + 12, -1, ts.HY - ts.CAM_Y + 2.5)
+    return ts.B(x - 17, x + 17, y - 10, y + 17, -1, ts.HY - ts.CAM_Y + 2.5)   # head z -10..17
 
 
 def worst_overhang(face):

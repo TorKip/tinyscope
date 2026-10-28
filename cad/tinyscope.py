@@ -1,4 +1,4 @@
-"""tinyscope: a Raspberry Pi 3B + Pi camera v1 on a printed fork mount, on a fixed EQ wedge.
+"""tinyscope: a Raspberry Pi 3B + Pi camera v2.1 on a printed fork mount, on a fixed EQ wedge.
 
     ulimit -v 3300000
     python cad/tinyscope.py       # → cad/out/
@@ -90,15 +90,19 @@ SOCK_X = 48.0                 # inner end of the head's side bosses
 PI_Y = 10.0                   # Pi's solder side (faces the camera); component side at 8.6
 PI_HOLES = [(-39.0, -24.5), (-39.0, 24.5), (19.0, -24.5), (19.0, 24.5)]   # USB end at +x
 CAM_Y = 15.3                  # camera PCB front (0.8 standoffs)
-CAM_HOLES = [(-10.5, 7.46), (10.5, 7.46), (-10.5, -5.04), (10.5, -5.04)]  # around the lens; MEASURE yours
-LENS_SQ = 8.5
+# v2.1: the same 21 × 12.5 hole pattern as v1, but the lens sits on the row nearer the FFC edge
+# (v1: 5.04 inside it). The lens stays at x = z = 0, so the hood still fits; the holes move instead.
+CAM_HOLES = [(-10.5, 12.5), (10.5, 12.5), (-10.5, 0.0), (10.5, 0.0)]   # from the photo; MEASURE yours
+LENS_SQ = 9.0                 # lens module, square
+CAM_FLEX = (-6.5, 6.5, 4.0, 12.3)   # (x0, x1, z0, z1) of the module's flex + connector on the PCB front
 DOWELS = [(-17.0, -15.0), (-17.0, 24.0)]   # 1.75 mm filament pins, hood ↔ head
 FIL_HOLE = 1.85
 HOOD_END = 44.5               # hood mouth (y); lens front ≈ 20.3
 SERVO = (8.0, 20.0)           # SG90 shaft (x, z) on the hood
 SERVO_FLOOR = HY + 2.4        # hood plate top, the servo's bottom
 
-FOV_H, FOV_V = 53.5, 41.4     # OV5647 + stock 3.6 mm lens
+FOV_H, FOV_V = 53.5, 41.4     # the hood's design field (v1's OV5647); kept so the printed hood fits
+CAM_FOV = (62.2, 48.8)        # v2.1: IMX219 + stock 3.04 mm lens; the hood clips its outer ~1-2°
 
 
 # ---------- helpers ----------
@@ -343,6 +347,8 @@ def head_body():
     for x, z in CAM_HOLES:
         h += Pos(x, 0, z) * Rot(-90, 0, 0) * (cyl_z(2.0, CAM_Y, FRONT_IN + 0.01) + cyl_z(0.95, CAM_Y - 1.8, CAM_Y))
     h -= B(-LENS_SQ / 2 - 0.35, LENS_SQ / 2 + 0.35, FRONT_IN - 1, HY + 1, -LENS_SQ / 2 - 0.35, LENS_SQ / 2 + 0.35)
+    fx0, fx1, fz0, fz1 = CAM_FLEX                                         # pocket: 1.3 into the wall, 1.1 left
+    h -= B(fx0, fx1, FRONT_IN - 1, FRONT_IN + 1.3, fz0, fz1)
     # dowel bosses for the hood (filament pins)
     for x, z in DOWELS:
         h += Pos(x, 0, z) * Rot(-90, 0, 0) * cyl_z(2.6, 12.1, FRONT_IN + 0.01)
@@ -469,12 +475,16 @@ def dupont_block():
     return B(-35.4, 15.4, 21.5, 26.5, 9.9, 23.9)
 
 
-def cam_v1():
-    c = B(-12.5, 12.5, -14.5, 9.5, -1.0, 0)
+def cam_v2():
+    """PCB 25 × 24, holes 2 in from three edges; the FFC edge is 9.5 past the lens row."""
+    yf = CAM_HOLES[2][1] - 9.5                                             # FFC edge
+    c = B(-12.5, 12.5, yf, CAM_HOLES[0][1] + 2.0, -1.0, 0)
     for x, y in CAM_HOLES:
         c -= cyl_z(1.1, -2, 1, x=x, y=y)
     c += B(-LENS_SQ / 2, LENS_SQ / 2, -LENS_SQ / 2, LENS_SQ / 2, 0, 3.2) + cyl_z(3.0, 3.2, 5.0)
-    c += B(-10, 10, -14.5, -9.5, -3.0, -1.0)                               # FFC connector (back)
+    fx0, fx1, fz0, fz1 = CAM_FLEX
+    c += B(-fx1, -fx0, fz0 + 0.3, fz1 - 0.3, 0, 1.5)                        # flex + connector (front); local x = -head x
+    c += B(-10, 10, yf, yf + 5, -3.0, -1.0)                                # FFC connector (back)
     return c
 
 
@@ -534,7 +544,7 @@ def build():
         "lens_cap": (frame((SERVO[0], HOOD_END + 0.3, SERVO[1]), (1, 0, 0), (0, 1, 0)) * lens_cap(), "print"),
         "pi": (frame((0, PI_Y, 0), (1, 0, 0), (0, -1, 0)) * pi3b(), "bought"),
         "jumpers": (frame((0, PI_Y, 0), (1, 0, 0), (0, -1, 0)) * dupont_block(), "bought"),
-        "camera": (frame((0, CAM_Y, 0), (-1, 0, 0), (0, 1, 0)) * cam_v1(), "bought"),
+        "camera": (frame((0, CAM_Y, 0), (-1, 0, 0), (0, 1, 0)) * cam_v2(), "bought"),
         "servo": (frame((SERVO[0], SERVO_FLOOR, SERVO[1]), (1, 0, 0), (0, 1, 0)) * sg90(), "bought"),
         "imu": (frame((-16, BACK + 1.0, -8 - 0.8), (1, 0, 0), (0, 0, 1)) * Pos(0, 0, 0) * sensor_board(13, 18), "bought"),
         "compass": (frame((13, BACK + 1.0, -8 - 0.8), (1, 0, 0), (0, 0, 1)) * sensor_board(14, 18), "bought"),

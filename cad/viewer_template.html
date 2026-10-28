@@ -8,12 +8,12 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:13px 
 #t label{display:flex;gap:8px;align-items:center;margin-top:4px}#t input[type=range]{flex:1}
 #t button{margin:4px 4px 0 0}.k{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 3px 0 8px}
 </style></head><body>
-<div id="t"><b>tinyscope</b>: Pi 3B + camera v1 on a printed fork, fixed wedge (latitude 60°).
+<div id="t"><b>tinyscope</b>: Pi 3B + camera v2.1 on a printed fork, fixed wedge (latitude 60°).
 <span class="k" style="background:#ed8c38"></span>print <span class="k" style="background:#408cd9"></span>print (small parts)
 <span class="k" style="background:#737a85"></span>bought / in hand. Drag to orbit, scroll to zoom.
 <label>Hour angle <input id="ha" type="range" min="-180" max="180" value="0" step="1"><span id="hav"></span></label>
 <label>Dec <input id="dec" type="range" min="-35" max="100" value="20" step="1"><span id="decv"></span></label>
-<label><input id="fov" type="checkbox" checked> show the camera's field (53.5° × 41.4°)</label>
+<label><input id="fov" type="checkbox" checked> show the hood's design field (53.5° × 41.4°; the v2.1 camera sees 62.2° × 48.8°)</label>
 <button data-p="0,90">pole</button><button data-p="0,0">meridian, equator</button><button data-p="0,-30">south horizon</button>
 <button data-p="-90,20">east</button><button data-p="90,20">west</button><button data-p="0,60">overhead-ish</button>
 </div>

@@ -9,7 +9,7 @@ as I go (G6, the article).*
 |---|---|---|---|
 | Raspberry Pi 3B | 1 | yes | |
 | microSD card, ≥ 16 GB | 1 | ? | Raspberry Pi OS Lite 64-bit |
-| Pi camera v1 (OV5647) + its ribbon | 1 | yes | measure the board's holes before printing (`CAM_HOLES`) |
+| Pi camera v2.1 (IMX219) + its ribbon | 1 | yes | measure the board's holes before printing (`CAM_HOLES`) |
 | 28BYJ-48 5 V stepper + ULN2003 board | 2 | ? | often sold as a pair |
 | SG90 servo | 1 | ? | for the lens cap (darks); with its screws |
 | GY-BMI160 IMU | 1 | **to buy** | in the head; homing and levelling. Measure the board before printing the lid |
