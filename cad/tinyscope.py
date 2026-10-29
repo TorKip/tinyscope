@@ -11,8 +11,8 @@ Three frames, each a kinematic group:
   lens hood and cap servo turn with Dec. head = Pos(0, 0, DEC_H) * Rot(dec, 0, 0) in mount, so
   dec = 90 points the camera at the pole.
 
-Only power crosses an axis: it comes up through the hollow polar axis, and a 10-wire Dupont
-ribbon (8 step lines, 5 V, GND) goes through the hollow left Dec stub into the head.
+Only power crosses an axis: it comes up through the hollow polar axis, and an 11-wire Dupont
+ribbon (8 step lines, 2 GND, 5 V; docs/wiring.md) goes through the hollow left Dec stub into the head.
 No bought hardware: printed push pins (or M3 screws), 1.75 mm filament as dowels, the screws
 that come with the SG90.
 """
@@ -346,7 +346,7 @@ def dec_stub():
 
 
 def cable_stub():
-    """Left (-x) stub, hollow for the 10-wire ribbon: flange outside the tine, journal, hex key, and a
+    """Left (-x) stub, hollow for the 11-wire ribbon: flange outside the tine, journal, hex key, and a
     round end with a groove for a circlip inside the head. Local z = head -x, z = 0 at x = -54."""
     s = cyl_z(15, TINE_OUT - HX, TINE_OUT - HX + 2)
     s += cyl_z(STUB_D / 2, 0, TINE_OUT - HX + 0.01)

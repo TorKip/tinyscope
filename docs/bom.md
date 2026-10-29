@@ -18,7 +18,8 @@ as I go (G6, the article).*
 | ~~MLX90614 BCC IR sensor~~ | 0 | | later, as an experiment (docs/benchmarks.md) |
 | USB power bank, 5 V ≥ 2 A | 1 | ? | |
 | Spare USB-A cable | 1 | ? | cut for the Y harness: Pi header + the ULN boards |
-| Dupont jumpers F–F | ~20 | ? | often come with the 28BYJ-48 kits; a 10-pin housing for the ribbon if there's one in the drawer |
+| Dupont jumpers F–F | ~20 | ? | often come with the 28BYJ-48 kits; a 2×5 housing for the ribbon and two 1×4 for the ULN ends, if they're in the drawer ([wiring](wiring.md)) |
+| Dupont jumpers M–F | 3 | ? | the servo's plug onto pins 4, 12, 14 |
 
 ## Mechanical
 

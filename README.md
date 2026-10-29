@@ -15,8 +15,8 @@ Kostnaden vil være minimal, selv om en raspberry pi er dyr for tiden hadde jeg 
 # tinyscope — the smallest robotic sky camera that still works
 
 *Started 2026-10-22. Goals: [GOALS.md](GOALS.md). Software:
-[docs/software.md](docs/software.md). Building it: [docs/bom.md](docs/bom.md)
-and [docs/print-plan.md](docs/print-plan.md).*
+[docs/software.md](docs/software.md). Building it: [docs/bom.md](docs/bom.md),
+[docs/print-plan.md](docs/print-plan.md) and [docs/wiring.md](docs/wiring.md).*
 
 *Written with a lot of help from an AI assistant (Claude); the project, its
 decisions and its mistakes are mine.*
@@ -142,7 +142,7 @@ half-step (0.8 px). Sidereal tracking = one half-step every 4.23 s. Slew at
 ## Power: header or USB?
 
 As designed, power comes up the polar axis to the fork, and **the Pi gets 5 V
-through its GPIO header**, on the same 10-wire ribbon as the step lines
+through its GPIO header**, on the same 11-wire ribbon as the step lines
 (through the Dec stub). The two options:
 
 | | GPIO header (as designed) | Micro-USB |
@@ -151,11 +151,13 @@ through its GPIO header**, on the same 10-wire ribbon as the step lines
 | Voltage drop | Slightly less (no socket and fuse in the path) | The socket and fuse cost ~0.1–0.2 V |
 | Mechanics | One ribbon through the Dec stub, nothing new | A second cable with a bulky plug through the Dec stub and into the head: a CAD change |
 
-**Decided (2026-10-22): the header**, and make the mistake hard: 5 V
-and GND in one fixed 10-pin housing that is marked and glued as a block, and
-a multimeter check before the first power-up. The motors and servo take their
-5 V from the harness, not from the Pi's pins, so a stalled servo can't brown
-out the Pi.
+**Decided (2026-10-22): the header**, and make the mistake hard: the step
+lines and two GND in one 2×5 housing on pins 31–40 (flush with the header's
+end, no 5 V in it), 5 V on its own marked housing on pin 2, and a multimeter
+check before the first power-up (2026-10-28; the first plan's pins didn't fit
+one housing). The motors take their 5 V from the harness at the fork; the
+servo takes it from pin 4, the same 5 V net, so its drop shows in the
+under-voltage log. Details: [docs/wiring.md](docs/wiring.md).
 
 The real risk either way is **voltage drop**: the rig draws about 2 A peak,
 and the thin wires in a cheap USB cable lose 0.5–1 V at that current. The
@@ -186,11 +188,11 @@ Details and the guided/robotic alignment routine: [docs/alignment.md](docs/align
   polar alignment), Siril for stacking.
 - **Later**: an ASCOM Alpaca endpoint for N.I.N.A. on Windows.
 
-GPIO plan (BCM, physical pin): RA IN1–4 = 17, 27, 22, 23 (11, 13, 15, 16);
-Dec IN1–4 = 24, 25, 5, 6 (18, 22, 29, 31); servo = 18 (12, hardware PWM);
-I²C = 2, 3 (3, 5) for the IMU (+ IR sky sensor later) at 3.3 V (1); 5 V in on
-pin 2, GND on pin 6; servo and motor 5 V from the harness, not the Pi's pins (see
-*Power*).
+GPIO plan (BCM, physical pin): RA IN1–4 = 6, 12, 13, 19 (31, 32, 33, 35);
+Dec IN1–4 = 16, 26, 20, 21 (36, 37, 38, 40); ribbon GND on 34 and 39; servo =
+18 (12, hardware PWM), its 5 V on 4, GND on 14; I²C = 2, 3 (3, 5) for the IMU
+(+ IR sky sensor later) at 3.3 V (1), GND on 9; 5 V in on pin 2. Diagrams and
+the pin table: [docs/wiring.md](docs/wiring.md).
 
 ## Build order
 
